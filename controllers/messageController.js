@@ -42,6 +42,27 @@ const getUserMessages = async (req, res, next) => {
     });
   }
 };
+const deleteUserMessages = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ _id: id });
+    if (!user) {
+      return res.status(404).json({
+        Error: "There is no user with this ID",
+      });
+    }
+    console.log(user);
+    await Message.deleteMany({ sendTo: user._id });
+    res.status(200).json({
+      status: "Messages deleted successfully for this user",
+    });
+  } catch (err) {
+    res.status(400).json({
+      Error: "Couldn't find any messages for this user",
+      errMsg: err,
+    });
+  }
+};
 const deleteAllMessages = async (req, res, next) => {
   try {
     await Message.deleteMany();
@@ -58,4 +79,5 @@ module.exports = {
   sendMessage,
   deleteAllMessages,
   getUserMessages,
+  deleteUserMessages,
 };
