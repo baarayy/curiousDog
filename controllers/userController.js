@@ -66,9 +66,23 @@ const getAllUsers = async (req, res, next) => {
     });
   }
 };
+const getUserData = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ _id: id });
+    res.status(200).json({
+      user,
+    });
+  } catch (err) {
+    res.status(400).json({
+      Error: "Couldn't find data for this user",
+    });
+  }
+};
 module.exports = {
   createUser,
   loginUser,
   deleteAllUsers,
   getAllUsers,
+  getUserData,
 };
