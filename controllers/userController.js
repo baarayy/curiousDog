@@ -42,7 +42,20 @@ const loginUser = async (req, res, next) => {
     });
   }
 };
+const deleteAllUsers = async (req, res, next) => {
+  try {
+    await User.deleteMany();
+    res.json({
+      message: "all Users have been deleted",
+    });
+  } catch (err) {
+    res.json({
+      message: "Can/'t delete Users",
+    });
+  }
+};
 module.exports = {
   createUser,
   loginUser,
+  deleteAllUsers,
 };
