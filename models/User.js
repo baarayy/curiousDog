@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { isEmail } = require("validator");
+const bcrypt = require("bcrypt");
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -21,6 +22,18 @@ const userSchema = new mongoose.Schema({
     minlength: [6, "password is too short"],
   },
   messages: [Object],
+});
+userSchema.pre("save", async function (next) {
+  const user = this;
+  if (!user.isModified("password")) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(user.password, salt);
+    user.password = hash;
+    next();
+  } catch (err) {
+    return next(err);
+  }
 });
 const User = mongoose.model("User", userSchema);
 module.exports = User;
