@@ -5,10 +5,11 @@ const {
   deleteAllUsers,
   getAllUsers,
   getUserData,
+  verifyUser,
 } = require("../controllers/userController");
 userRouter.post("/signup", createUser);
 userRouter.post("/login", loginUser);
 userRouter.delete("/", deleteAllUsers);
 userRouter.get("/", getAllUsers);
-userRouter.get("/:id", getUserData);
+userRouter.get("/:id", verifyUser, getUserData);
 module.exports = userRouter;

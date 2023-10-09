@@ -5,8 +5,9 @@ const {
   getUserMessages,
   deleteUserMessages,
 } = require("../controllers/messageController");
+const { verifyUser } = require("../controllers/userController");
 messageRouter.post("/send", sendMessage);
 messageRouter.delete("/", deleteAllMessages);
-messageRouter.get("/:id", getUserMessages);
-messageRouter.delete("/:id", deleteUserMessages);
+messageRouter.get("/:id", verifyUser, getUserMessages);
+messageRouter.delete("/:id", verifyUser, deleteUserMessages);
 module.exports = messageRouter;

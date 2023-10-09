@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: [6, "password is too short"],
-    select: false,
+    // select: false,
   },
   messages: [Object],
 });

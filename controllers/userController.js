@@ -2,10 +2,13 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const generateToken = require("../utils/generateToken");
+const { promisify } = require("util");
 const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    const token = jwt.sign({ email }, process.env.SECRET, { expiresIn: "30m" });
+    const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
+      expiresIn: "30m",
+    });
     const newUser = await User.create({ username, email, password });
     res.status(200).json({
       message: "User signed up successfully!",
@@ -28,7 +31,7 @@ const loginUser = async (req, res, next) => {
       console.log("Couldnt login user");
       return next();
     }
-    const token = jwt.sign({ username }, process.env.SECRET, {
+    const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
       expiresIn: "30m",
     });
     res.status(200).json({
@@ -79,10 +82,43 @@ const getUserData = async (req, res, next) => {
     });
   }
 };
+const verifyUser = async (req, res, next) => {
+  try {
+    const authorizationHeader = req.headers["authorization"];
+    if (!authorizationHeader) {
+      return res.status(401).json({
+        ErrorMsg: "Please login first",
+      });
+    }
+    const tokenParts = authorizationHeader.split(" ");
+    if (tokenParts.length !== 2 || tokenParts[0].toLowerCase() !== "bearer") {
+      return res
+        .status(401)
+        .json({ error: "Invalid Authorization header format" });
+    }
+    const token = tokenParts[1];
+    if (!token) {
+      return res
+        .status(401)
+        .json({ error: "Invalid Authorization header format" });
+    }
+    const decode = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ _id: decoded._id });
+    if (user) {
+      return next();
+    }
+  } catch (err) {
+    res.status(401).json({
+      ErrorMsg: "Your are unAuthorized,please login",
+      Error: err,
+    });
+  }
+};
 module.exports = {
   createUser,
   loginUser,
   deleteAllUsers,
   getAllUsers,
   getUserData,
+  verifyUser,
 };
