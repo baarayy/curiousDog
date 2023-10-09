@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const generateToken = require("../utils/generateToken");
 const { promisify } = require("util");
+const { decode } = require("punycode");
 const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -97,12 +98,13 @@ const verifyUser = async (req, res, next) => {
         .json({ error: "Invalid Authorization header format" });
     }
     const token = tokenParts[1];
-    if (!token) {
+    const decoded = await promisify(jwt.verify)(token, process.env.SECRET);
+    const { id } = req.params;
+    if (id !== decoded._id) {
       return res
         .status(401)
-        .json({ error: "Invalid Authorization header format" });
+        .json({ error: "Invalid token! please login from your email" });
     }
-    const decode = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
     const user = await User.findOne({ _id: decoded._id });
     if (user) {
       return next();
