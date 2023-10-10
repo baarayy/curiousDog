@@ -1,120 +1,84 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const generateToken = require("../utils/generateToken");
 const { promisify } = require("util");
-const createUser = async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-    const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
-      expiresIn: "30m",
-    });
-    const newUser = await User.create({ username, email, password });
-    res.status(200).json({
-      message: "User signed up successfully!",
-      user: newUser,
-      token,
-    });
-  } catch (err) {
-    res.status(400).json({
-      Error: "Couldn't create user",
-      errMessage: err,
-    });
+const catchAsync = require("../utils/catchAsyncError");
+const AppError = require("../utils/AppError");
+
+const createUser = catchAsync(async (req, res, next) => {
+  const { username, email, password } = req.body;
+  const userDB = await User.findOne({ username });
+  if (userDB) return next(new AppError("Username already exists!", 400));
+  const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
+    expiresIn: "30m",
+  });
+  const newUser = await User.create({ username, email, password });
+  res.status(200).json({
+    message: "User signed up successfully!",
+    user: newUser,
+    token,
+  });
+});
+const loginUser = catchAsync(async (req, res, next) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
+  if (!user || !(await bcrypt.compare(password, user.password)))
+    return next(new AppError("Incorrect username or password", 401));
+  const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
+    expiresIn: "30m",
+  });
+  res.status(200).json({
+    status: "ok",
+    token,
+  });
+});
+const deleteAllUsers = catchAsync(async (req, res, next) => {
+  await User.deleteMany();
+  res.json({
+    message: "all Users have been deleted",
+  });
+});
+const getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find();
+  res.status(200).json({
+    users,
+  });
+  next(new AppError("Coudln't get users", 400));
+});
+const getUserData = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const user = await User.findOne({ _id: id });
+  res.status(200).json({
+    user,
+  });
+  next(new AppError("Couldn't find data for this user", 400));
+});
+const verifyUser = catchAsync(async (req, res, next) => {
+  const authorizationHeader = req.headers["authorization"];
+  if (!authorizationHeader) {
+    return next(new AppError("Please login first", 404));
   }
-};
-const loginUser = async (req, res, next) => {
-  try {
-    const { username, password } = req.body;
-    console.log(username, password);
-    const user = await User.findOne({ username });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      console.log("Couldnt login user");
-      return next();
-    }
-    const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
-      expiresIn: "30m",
-    });
-    res.status(200).json({
-      status: "ok",
-      token,
-    });
-  } catch (err) {
-    res.status(400).json({
-      message: "Couldn't login",
-      error: err,
-    });
+  const tokenParts = authorizationHeader.split(" ");
+  if (tokenParts.length !== 2 || tokenParts[0].toLowerCase() !== "bearer") {
+    return next(new AppError("Invalid Authorization header format", 400));
   }
-};
-const deleteAllUsers = async (req, res, next) => {
-  try {
-    await User.deleteMany();
-    res.json({
-      message: "all Users have been deleted",
-    });
-  } catch (err) {
-    res.json({
-      message: "Can/'t delete Users",
-    });
+  const token = tokenParts[1];
+  const decoded = await promisify(jwt.verify)(token, process.env.SECRET);
+  if (!decoded) return next(new AppError("Invalid token!", 401));
+  const { id } = req.params;
+  if (id !== decoded._id) {
+    return next(
+      new AppError("Invalid token! please login from your email", 400)
+    );
   }
-};
-const getAllUsers = async (req, res, next) => {
-  try {
-    const users = await User.find();
-    res.status(200).json({
-      users,
-    });
-  } catch (err) {
-    res.status(404).json({
-      Error: "Could't find users",
-    });
+  const user = await User.findOne({ _id: decoded._id });
+  if (user) {
+    return next();
   }
-};
-const getUserData = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const user = await User.findOne({ _id: id });
-    res.status(200).json({
-      user,
-    });
-  } catch (err) {
-    res.status(400).json({
-      Error: "Couldn't find data for this user",
-    });
-  }
-};
-const verifyUser = async (req, res, next) => {
-  try {
-    const authorizationHeader = req.headers["authorization"];
-    if (!authorizationHeader) {
-      return res.status(401).json({
-        ErrorMsg: "Please login first",
-      });
-    }
-    const tokenParts = authorizationHeader.split(" ");
-    if (tokenParts.length !== 2 || tokenParts[0].toLowerCase() !== "bearer") {
-      return res
-        .status(401)
-        .json({ error: "Invalid Authorization header format" });
-    }
-    const token = tokenParts[1];
-    const decoded = await promisify(jwt.verify)(token, process.env.SECRET);
-    const { id } = req.params;
-    if (id !== decoded._id) {
-      return res
-        .status(401)
-        .json({ error: "Invalid token! please login from your email" });
-    }
-    const user = await User.findOne({ _id: decoded._id });
-    if (user) {
-      return next();
-    }
-  } catch (err) {
-    res.status(401).json({
-      ErrorMsg: "Your are unAuthorized,please login",
-      Error: err,
-    });
-  }
-};
+  res.status(404).json({
+    ErrorMessage: "User not found!",
+  });
+});
 module.exports = {
   createUser,
   loginUser,
