@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const generateToken = require("../utils/generateToken");
 const { promisify } = require("util");
-const { decode } = require("punycode");
 const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
