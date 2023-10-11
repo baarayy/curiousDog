@@ -19,15 +19,13 @@ To run CuriousDog locally or deploy it to a server, follow these steps:
 
 1. Clone the repository to your local machine:
 
-`bash`
-Copy code
-git clone https://github.com/baarayy/curiousDog.git
+- `git clone https://github.com/baarayy/curiousDog.git`.
 
 2. Install the required dependencies:
 
-`bash`
-cd CuriousDog.
-npm install.
+- open a new terminal.
+- `cd CuriousDog`.
+- Write `npm install`.
 
 3. Configure the environment variables:
 - Create a .env file in the root directory and add the following variables:
@@ -42,7 +40,6 @@ npm install.
 
 4. Start the server:
 
- `bash`
-Copy code
-npm start
-Open your web browser and access the application at http://localhost:3030.
+- Open terminal.
+- Write `npm start`.
+- Open your web browser and access the application at `http://localhost:3030`.
