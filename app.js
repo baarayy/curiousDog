@@ -16,7 +16,7 @@ app.use(express.json());
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/messages", messageRouter);
 app.use("*", notFound);
-const PORT = process.env.PORT || 3030;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
-  console.log("App is running on port 3030");
+  console.log(`App is running on port ${PORT}`);
 });
