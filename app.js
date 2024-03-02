@@ -5,7 +5,8 @@ const userRouter = require("./routes/userRoute");
 const messageRouter = require("./routes/messageRoute");
 const notFound = require("./utils/notFound");
 dotenv.config();
-const DB = process.env.DATABASE.replace("<password>", process.env.PASSWORD);
+const DB = process.env.DATABASE;
+console.log(DB);
 mongoose
   .connect(DB)
   .then(() => console.log("DB connection is successful!"))
