@@ -9,10 +9,10 @@ const createUser = catchAsync(async (req, res, next) => {
   const { username, email, password } = req.body;
   const userDB = await User.findOne({ username });
   if (userDB) return next(new AppError("Username already exists!", 400));
-  const token = jwt.sign({ _id: user._id }, process.env.SECRET, {
+  const newUser = await User.create({ username, email, password });
+  const token = jwt.sign({ _id: newUser._id }, process.env.SECRET, {
     expiresIn: "30m",
   });
-  const newUser = await User.create({ username, email, password });
   res.status(200).json({
     message: "User signed up successfully!",
     user: newUser,

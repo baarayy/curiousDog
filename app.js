@@ -10,7 +10,7 @@ console.log(DB);
 mongoose
   .connect(DB)
   .then(() => console.log("DB connection is successful!"))
-  .catch((err) => console.log('error connecting to db'));
+  .catch((err) => console.log("error connecting to db"));
 const app = express();
 app.use(express.json());
 app.use("/api/v1/users", userRouter);
